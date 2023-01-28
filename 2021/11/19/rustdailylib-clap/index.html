@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"qingmo.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"8F0XRVWURW","apiKey":"ad6371526c987788e55f983ffa8bcb31","indexName":"blog","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="缘起主要对go每日一库和Rust每周一库的拾人牙慧，不过学习嘛，不寒碜。哈哈。 今天是第一天，我们从命令行参数解析库——Clap开始。 简介相较于golang，rust的解析命令参数等非语言核心能力并非是在核心库中直接提供的，而是由三方库提供。 三方库就会有一个选择问题，特别是对于不熟悉的新手。 我们可以通过lib.rs网站中Categories中选择Command-line interface来">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust每日一库之Clap">
+<meta property="og:url" content="http://qingmo.github.io/2021/11/19/rustdailylib-clap/index.html">
+<meta property="og:site_name" content="Chaos&#39;s Blog">
+<meta property="og:description" content="缘起主要对go每日一库和Rust每周一库的拾人牙慧，不过学习嘛，不寒碜。哈哈。 今天是第一天，我们从命令行参数解析库——Clap开始。 简介相较于golang，rust的解析命令参数等非语言核心能力并非是在核心库中直接提供的，而是由三方库提供。 三方库就会有一个选择问题，特别是对于不熟悉的新手。 我们可以通过lib.rs网站中Categories中选择Command-line interface来">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-11-19T03:24:05.000Z">
+<meta property="article:modified_time" content="2023-01-28T07:55:12.806Z">
+<meta property="article:author" content="Chaos">
+<meta property="article:tag" content="Rust">
+<meta property="article:tag" content="Clap">
+<meta property="article:tag" content="每日一库">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://qingmo.github.io/2021/11/19/rustdailylib-clap/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Rust每日一库之Clap | Chaos's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?2b44f5018cb8525a4d94479bc67f2882";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  <script>
+    !function(e,t,n,g,i){e[i]=e[i]||function(){(e[i].q=e[i].q||[]).push(arguments)},n=t.createElement("script"),tag=t.getElementsByTagName("script")[0],n.async=1,n.src=('https:'==document.location.protocol?'https://':'http://')+g,tag.parentNode.insertBefore(n,tag)}(window,document,"script","assets.growingio.com/2.1/gio.js","gio");
+    gio('init', 'UA-83160538-1', {});
+    gio('send');
+  </script>
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Chaos's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://qingmo.github.io/2021/11/19/rustdailylib-clap/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/arch.png">
+      <meta itemprop="name" content="Chaos">
+      <meta itemprop="description" content="不以为耻，反以为荣">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Chaos's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Rust每日一库之Clap
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-11-19 11:24:05" itemprop="dateCreated datePublished" datetime="2021-11-19T11:24:05+08:00">2021-11-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-01-28 15:55:12" itemprop="dateModified" datetime="2023-01-28T15:55:12+08:00">2023-01-28</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>8.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>8 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="缘起"><a href="#缘起" class="headerlink" title="缘起"></a>缘起</h1><p>主要对<a target="_blank" rel="noopener" href="https://github.com/darjun/go-daily-lib">go每日一库</a>和<a target="_blank" rel="noopener" href="https://rustcc.cn/search?q=%E6%AF%8F%E5%91%A8%E4%B8%80%E5%BA%93">Rust每周一库</a>的拾人牙慧，不过学习嘛，不寒碜。哈哈。</p>
+<p>今天是第一天，我们从命令行参数解析库——<code>Clap</code>开始。</p>
+<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>相较于<code>golang</code>，<code>rust</code>的解析命令参数等非语言核心能力并非是在核心库中直接提供的，而是由三方库提供。</p>
+<p>三方库就会有一个选择问题，特别是对于不熟悉的新手。</p>
+<p>我们可以通过<code>lib.rs</code>网站中<code>Categories</code>中选择<code>Command-line interface</code>来查看对应的库排名来初步选择。</p>
+<p>如：<a target="_blank" rel="noopener" href="https://lib.rs/keywords/argument">https://lib.rs/keywords/argument</a></p>
+<p>对于参数解析，使用量最大的就是<code>Clap</code></p>
+<p>仓库：<a target="_blank" rel="noopener" href="https://github.com/clap-rs/clap">https://github.com/clap-rs/clap</a></p>
+<p>文档：<a target="_blank" rel="noopener" href="https://docs.rs/clap/3.0.0-beta.5/clap/">https://docs.rs/clap/3.0.0-beta.5/clap/</a></p>
+<p>视频教程：<a target="_blank" rel="noopener" href="https://www.youtube.com/playlist?list=PLza5oFLQGTl2Z5T8g1pRkIynR3E0_pc7U">https://www.youtube.com/playlist?list=PLza5oFLQGTl2Z5T8g1pRkIynR3E0_pc7U</a></p>
+<span id="more"></span>
+
+<h1 id="快速使用"><a href="#快速使用" class="headerlink" title="快速使用"></a>快速使用</h1><p>将<code>clap</code>作为依赖项加进<code>Cargo.toml</code>中</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[dependencies]</span></span><br><span class="line"><span class="attr">clap</span>=<span class="string">&quot;2.33.3&quot;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="keyword">crate</span> clap;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> clap::&#123;App, Arg&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> matched = App::new(<span class="string">&quot;MyApp&quot;</span>)</span><br><span class="line">        .arg(Arg::with_name(<span class="string">&quot;config&quot;</span>)</span><br><span class="line">            .short(<span class="string">&quot;c&quot;</span>)</span><br><span class="line">            .long(<span class="string">&quot;config&quot;</span>)</span><br><span class="line">            .value_name(<span class="string">&quot;FILE&quot;</span>)</span><br><span class="line">            .help(<span class="string">&quot;demo arg for cmd&quot;</span>)</span><br><span class="line">        )</span><br><span class="line">        .get_matches();</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">let</span> <span class="literal">Some</span>(c) = matched.value_of(<span class="string">&quot;config&quot;</span>) &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;value of config: &#123;&#125;&quot;</span>, c);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;hello&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不用参数运行</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> cargo run</span></span><br><span class="line">hello</span><br></pre></td></tr></table></figure>
+
+<p>带参数运行</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> cargo run -- --config haha</span></span><br><span class="line">value of config: haha</span><br><span class="line">hello</span><br></pre></td></tr></table></figure>
+
+<p>自带的帮助信息</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> cargo run -- -h</span></span><br><span class="line">MyApp</span><br><span class="line"></span><br><span class="line">USAGE:</span><br><span class="line">    basic [OPTIONS]</span><br><span class="line"></span><br><span class="line">FLAGS:</span><br><span class="line">    -h, --help       Prints help information</span><br><span class="line">    -V, --version    Prints version information</span><br><span class="line"></span><br><span class="line">OPTIONS:</span><br><span class="line">    -c, --config &lt;FILE&gt;    demo arg for cmd</span><br></pre></td></tr></table></figure>
+
+<p>可以看出来自带的帮助信息还可以安放更多的元信息，接下来就让我们来尽量尝试一下（篇幅过长，请选择性使用）</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">App::new(<span class="string">&quot;MyApp&quot;</span>)</span><br><span class="line">        .version(<span class="string">&quot;1.0&quot;</span>)</span><br><span class="line">        .author(<span class="string">&quot;Chaos Mo&quot;</span>)</span><br><span class="line">        .before_help(<span class="string">&quot;===haha before help===&quot;</span>)</span><br><span class="line">        .after_help(<span class="string">&quot;===haha after help===&quot;</span>)</span><br><span class="line">        .about(<span class="string">&quot;This is demo app for clap&quot;</span>)</span><br><span class="line">        .help_message(<span class="string">&quot;Print custom help information&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>运行效果：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> cargo run --bin basicmeta -- -h</span></span><br><span class="line">===haha before help===</span><br><span class="line"></span><br><span class="line">MyApp 1.0</span><br><span class="line">Chaos Mo</span><br><span class="line">This is demo app for clap</span><br><span class="line"></span><br><span class="line">USAGE:</span><br><span class="line">    basicmeta [OPTIONS]</span><br><span class="line"></span><br><span class="line">FLAGS:</span><br><span class="line">    -h, --help       Print custom help information</span><br><span class="line">    -V, --version    Prints version information</span><br><span class="line"></span><br><span class="line">OPTIONS:</span><br><span class="line">    -c, --config &lt;FILE&gt;    demo arg for cmd</span><br><span class="line"></span><br><span class="line">===haha after help===</span><br><span class="line"><span class="meta">$</span><span class="bash"> cargo run --bin basicmeta -- -V</span></span><br><span class="line">MyApp 1.0</span><br></pre></td></tr></table></figure>
+
+<p>更多的方法，请参看文档。</p>
+<h1 id="参数类型"><a href="#参数类型" class="headerlink" title="参数类型"></a>参数类型</h1><p><em><strong>Rust是一门强类型且类型安全的静态语言</strong></em></p>
+<p>在<code>clap</code>中，只要你的目标参数类型是实现了<code>std::str::FromStr</code>，就可以使用转换宏将其转换成目标类型。同时支持单个，多个(<code>Vec&lt;T&gt;</code>)。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="keyword">crate</span> clap;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> clap::&#123;App, value_t, values_t&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> matches = App::new(<span class="string">&quot;myapp&quot;</span>)</span><br><span class="line">        <span class="comment">// 等价于</span></span><br><span class="line">        <span class="comment">// .args(</span></span><br><span class="line">        <span class="comment">//     &amp;[</span></span><br><span class="line">        <span class="comment">//         Arg::with_name(&quot;seq&quot;)</span></span><br><span class="line">        <span class="comment">//         .multiple(true)</span></span><br><span class="line">        <span class="comment">//         .help(&quot;A sequence of whole positive numbers, i.e. 20 25 30&quot;),</span></span><br><span class="line">        <span class="comment">//         Arg::with_name(&quot;len&quot;)</span></span><br><span class="line">        <span class="comment">//         .short(&quot;l&quot;)</span></span><br><span class="line">        <span class="comment">//         .long(&quot;len&quot;)</span></span><br><span class="line">        <span class="comment">//         .value_name(&quot;len&quot;)</span></span><br><span class="line">        <span class="comment">//         .help(&quot;A length to use, defaults to 10 when omitted&quot;)</span></span><br><span class="line">        <span class="comment">//     ]</span></span><br><span class="line">        <span class="comment">// )</span></span><br><span class="line">        .args_from_usage(</span><br><span class="line">            <span class="string">&quot;&lt;seq&gt;... &#x27;A sequence of whole positive numbers, i.e. 20 25 30&#x27;</span></span><br><span class="line"><span class="string">            --len -l [len] &#x27;A length to use, defaults to 10 when omitted&#x27;</span></span><br><span class="line"><span class="string">            --offline -o [isoffline] &#x27;is computer offline&#x27;&quot;</span>,</span><br><span class="line">        )</span><br><span class="line">        .get_matches();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> len: <span class="built_in">u32</span> = value_t!(matches, <span class="string">&quot;len&quot;</span>, <span class="built_in">u32</span>).unwrap_or(<span class="number">10</span>);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;len (&#123;&#125;) + 2 = &#123;&#125;&quot;</span>, len, len + <span class="number">2</span>);</span><br><span class="line">    <span class="keyword">let</span> online: <span class="built_in">bool</span> = value_t!(matches, <span class="string">&quot;offline&quot;</span>, <span class="built_in">bool</span>).unwrap_or(<span class="literal">false</span>);</span><br><span class="line">    <span class="keyword">if</span> online &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;computer is online&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;computer is offline&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="comment">// 如果类型不满足，可以中断程序退出</span></span><br><span class="line">    <span class="keyword">for</span> v <span class="keyword">in</span> values_t!(matches, <span class="string">&quot;seq&quot;</span>, <span class="built_in">u32</span>).unwrap_or_else(|e| e.exit()) &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;Sequence part &#123;&#125; + 2: &#123;&#125;&quot;</span>, v, v + <span class="number">2</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行结果</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> cargo run --bin typedvalue -- 1 2 3 --len 12 -o <span class="literal">true</span></span></span><br><span class="line">len (12) + 2 = 14</span><br><span class="line">computer is online</span><br><span class="line">Sequence part 1 + 2: 3</span><br><span class="line">Sequence part 2 + 2: 4</span><br><span class="line">Sequence part 3 + 2: 5</span><br></pre></td></tr></table></figure>
+
+<p>测试不满足的类型安全的输入参数</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> cargo run --bin typedvalue -- 1 2 3.1 --len 12 -o <span class="literal">true</span></span></span><br><span class="line">len (12) + 2 = 14</span><br><span class="line">computer is online</span><br><span class="line">error: Invalid value: The argument &#x27;3.1&#x27; isn&#x27;t a valid value</span><br></pre></td></tr></table></figure>
+
+<p>总结：</p>
+<p>利用<code>value_t</code>及<code>values_t</code>可以将对应的参数转化为需要的类型。若类型不满足，则需要通过对<code>Result</code>进行判断。</p>
+<h1 id="选项格式"><a href="#选项格式" class="headerlink" title="选项格式"></a>选项格式</h1><p>clap库支持三种命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-o</span><br><span class="line">--optimize=3</span><br><span class="line">--optimize 3</span><br></pre></td></tr></table></figure>
+
+<p>-表示短选项，–表示长选项，同时支持多个重复参数，重复参数格式支持<code>-o -o -o</code>、<code>-oo</code>等多种形式。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="keyword">crate</span> clap;</span><br><span class="line"><span class="keyword">use</span> clap::&#123;App, Arg&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> matches = App::new(<span class="string">&quot;DemoApp&quot;</span>)</span><br><span class="line">        .version(<span class="string">&quot;1.0&quot;</span>)</span><br><span class="line">        .author(<span class="string">&quot;Chaos Mo&quot;</span>)</span><br><span class="line">        .about(<span class="string">&quot;Demo App About Information&quot;</span>)</span><br><span class="line">        .arg(</span><br><span class="line">            Arg::with_name(<span class="string">&quot;config&quot;</span>)</span><br><span class="line">                .short(<span class="string">&quot;c&quot;</span>)</span><br><span class="line">                .long(<span class="string">&quot;config&quot;</span>)</span><br><span class="line">                .value_name(<span class="string">&quot;FILE&quot;</span>)</span><br><span class="line">                .help(<span class="string">&quot;demo arg for cmd&quot;</span>),</span><br><span class="line">        )</span><br><span class="line">        .arg(</span><br><span class="line">            Arg::with_name(<span class="string">&quot;optimize&quot;</span>)</span><br><span class="line">                .short(<span class="string">&quot;o&quot;</span>)</span><br><span class="line">                .long(<span class="string">&quot;optimize&quot;</span>)</span><br><span class="line">                .multiple(<span class="literal">true</span>)</span><br><span class="line">                .help(<span class="string">&quot;Sets the level of optimize&quot;</span>),</span><br><span class="line">        )</span><br><span class="line">        .get_matches();</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">let</span> <span class="literal">Some</span>(c) = matches.value_of(<span class="string">&quot;config&quot;</span>) &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;value of config: &#123;&#125;&quot;</span>, c);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">match</span> matches.occurrences_of(<span class="string">&quot;optimize&quot;</span>) &#123;</span><br><span class="line">        <span class="number">0</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;No optimize&quot;</span>),</span><br><span class="line">        <span class="number">1</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Basic optimize&quot;</span>),</span><br><span class="line">        <span class="number">2</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Better optimize&quot;</span>),</span><br><span class="line">        <span class="number">3</span> | _ =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Are you kidding me?&quot;</span>),</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行效果</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> cargo run --bin styledargs -- --config=haha -o --optimize</span></span><br><span class="line">value of config: haha</span><br><span class="line">Better optimize</span><br></pre></td></tr></table></figure>
+
+<p>clap支持多重子参数嵌套</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="keyword">crate</span> clap;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> clap::&#123;App, Arg, SubCommand&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> matches = App::new(<span class="string">&quot;DemoApp&quot;</span>)</span><br><span class="line">        .subcommand(</span><br><span class="line">            SubCommand::with_name(<span class="string">&quot;install&quot;</span>)</span><br><span class="line">                .about(<span class="string">&quot;controls install features&quot;</span>)</span><br><span class="line">                .version(<span class="string">&quot;1.2&quot;</span>)</span><br><span class="line">                .author(<span class="string">&quot;Chaos Mo&quot;</span>)</span><br><span class="line">                .arg(</span><br><span class="line">                    Arg::with_name(<span class="string">&quot;force&quot;</span>)</span><br><span class="line">                        .short(<span class="string">&quot;f&quot;</span>)</span><br><span class="line">                        .long(<span class="string">&quot;force&quot;</span>)</span><br><span class="line">                        .help(<span class="string">&quot;install with force arg&quot;</span>),</span><br><span class="line">                ),</span><br><span class="line">        )</span><br><span class="line">        .get_matches();</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">let</span> <span class="literal">Some</span>(matches) = matches.subcommand_matches(<span class="string">&quot;install&quot;</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> matches.is_present(<span class="string">&quot;force&quot;</span>) &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;force is not right...&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;general install...&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>运行</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> cargo run --bin subdemo -- install -h</span></span><br><span class="line">subdemo-install 1.2</span><br><span class="line">Chaos Mo</span><br><span class="line">controls install features</span><br><span class="line"></span><br><span class="line">USAGE:</span><br><span class="line">    subdemo install [FLAGS]</span><br><span class="line"></span><br><span class="line">FLAGS:</span><br><span class="line">    -f, --force      install with force arg</span><br><span class="line">    -h, --help       Prints help information</span><br><span class="line">    -V, --version    Prints version information</span><br><span class="line"><span class="meta">$</span><span class="bash"> cargo run --bin subdemo -- install -f</span></span><br><span class="line">force is not right...</span><br></pre></td></tr></table></figure>
+
+<p>另外，<code>clap</code>也支持直接使用<code>dsl</code>形式的参数字符串解析模式。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[explicit name] [short] [long] [value names] [help string]</span><br></pre></td></tr></table></figure>
+
+<h1 id="另一种定义选项的方式"><a href="#另一种定义选项的方式" class="headerlink" title="另一种定义选项的方式"></a>另一种定义选项的方式</h1><p><code>clap</code>支持使用<code>YAML</code>文件来构建<code>CLI</code>并保持<code>Rust</code>源代码整洁或者通过为每个本地化使用不同的<code>YAML</code>文件来支持多个本地化翻译，但是此方法会有略微损失一些性能。</p>
+<p>这里的依赖与其他例子有稍许区别</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">clap</span>=&#123;version=<span class="string">&quot;2.33.3&quot;</span>, features=[<span class="string">&quot;yaml&quot;</span>]&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>先创建一个<code>cli.yml</code>保存选项</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">name:</span> <span class="string">ymldemo</span></span><br><span class="line"><span class="attr">version:</span> <span class="string">&quot;1.1&quot;</span></span><br><span class="line"><span class="attr">author:</span> <span class="string">Chaos</span> <span class="string">Mo</span></span><br><span class="line"><span class="attr">about:</span> <span class="string">Demo</span> <span class="string">App</span> <span class="string">for</span> <span class="string">Yaml</span> <span class="string">Cli</span></span><br><span class="line"><span class="attr">args:</span> </span><br><span class="line">    <span class="bullet">-</span> <span class="attr">config:</span></span><br><span class="line">        <span class="attr">short:</span> <span class="string">c</span></span><br><span class="line">        <span class="attr">long:</span> <span class="string">config</span></span><br><span class="line">        <span class="attr">value_name:</span> <span class="string">FILE</span></span><br><span class="line">        <span class="attr">help:</span> <span class="string">demo</span> <span class="string">arg</span> <span class="string">for</span> <span class="string">cmd</span></span><br><span class="line">        <span class="attr">takes_value:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">subcommands:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">install:</span> </span><br><span class="line">        <span class="attr">about:</span> <span class="string">controls</span> <span class="string">install</span> <span class="string">features</span></span><br><span class="line">        <span class="attr">version:</span> <span class="string">&quot;1.2&quot;</span></span><br><span class="line">        <span class="attr">author:</span> <span class="string">Chaos</span> <span class="string">Mo</span></span><br><span class="line">        <span class="attr">args:</span> </span><br><span class="line">            <span class="bullet">-</span> <span class="attr">force:</span> </span><br><span class="line">                <span class="attr">short:</span> <span class="string">f</span></span><br><span class="line">                <span class="attr">long:</span> <span class="string">force</span></span><br><span class="line">                <span class="attr">help:</span> <span class="string">force</span> <span class="string">to</span> <span class="string">install</span> <span class="string">features</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[macro_use]</span></span><br><span class="line"><span class="keyword">extern</span> <span class="keyword">crate</span> clap;</span><br><span class="line"><span class="keyword">use</span> clap::App;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> yaml = load_yaml!(<span class="string">&quot;cli.yml&quot;</span>);</span><br><span class="line">    <span class="keyword">let</span> matches = App::from_yaml(yaml).get_matches();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> config = matches.value_of(<span class="string">&quot;config&quot;</span>).unwrap_or(<span class="string">&quot;default.conf&quot;</span>);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Value for config: &#123;&#125;&quot;</span>, config);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">let</span> <span class="literal">Some</span>(matches) = matches.subcommand_matches(<span class="string">&quot;install&quot;</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> matches.is_present(<span class="string">&quot;force&quot;</span>) &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;force is not right...&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;general install...&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><p>一个优秀的代码，都是可以进行良好测试的。</p>
+<p>虽然解析逻辑应该不属于业务核心逻辑，但<code>Clap</code>提供了良好的测试方式来进行必要的测试途径。</p>
+<p>默认的<code>get_matches</code>实际上是接受 <a target="_blank" rel="noopener" href="https://doc.rust-lang.org/nightly/std/env/fn.args_os.html"><code>env::args_os</code></a>输入作为参数。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="keyword">crate</span> clap;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> std::&#123;error::Error, <span class="built_in">str</span>::Matches&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">use</span> clap::&#123;App, Arg&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> app = construct_app();</span><br><span class="line">    <span class="keyword">let</span> matches = app.get_matches();</span><br><span class="line">    <span class="keyword">let</span> config = matches.value_of(<span class="string">&quot;config&quot;</span>).unwrap_or(<span class="string">&quot;default.conf&quot;</span>);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Value for config: &#123;&#125;&quot;</span>, config);</span><br><span class="line">    <span class="keyword">match</span> matches.occurrences_of(<span class="string">&quot;optimize&quot;</span>) &#123;</span><br><span class="line">        <span class="number">0</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;No optimize&quot;</span>),</span><br><span class="line">        <span class="number">1</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Basic optimize&quot;</span>),</span><br><span class="line">        <span class="number">2</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Better optimize&quot;</span>),</span><br><span class="line">        <span class="number">3</span> | _ =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Are you kidding me?&quot;</span>),</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;hello&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">construct_app</span></span>() -&gt; App&lt;<span class="symbol">&#x27;static</span>, <span class="symbol">&#x27;static</span>&gt; &#123;</span><br><span class="line">    App::new(<span class="string">&quot;testclap&quot;</span>)</span><br><span class="line">        .about(<span class="string">&quot;about test clap information&quot;</span>)</span><br><span class="line">        .author(<span class="string">&quot;Chaos Mo&quot;</span>)</span><br><span class="line">        .arg(</span><br><span class="line">            Arg::with_name(<span class="string">&quot;config&quot;</span>)</span><br><span class="line">                .short(<span class="string">&quot;c&quot;</span>)</span><br><span class="line">                .long(<span class="string">&quot;config&quot;</span>)</span><br><span class="line">                .takes_value(<span class="literal">true</span>)</span><br><span class="line">                .value_name(<span class="string">&quot;FILE&quot;</span>)</span><br><span class="line">                .help(<span class="string">&quot;config information&quot;</span>),</span><br><span class="line">        )</span><br><span class="line">        .arg(</span><br><span class="line">            Arg::with_name(<span class="string">&quot;optimize&quot;</span>)</span><br><span class="line">                .short(<span class="string">&quot;o&quot;</span>)</span><br><span class="line">                .long(<span class="string">&quot;optimize&quot;</span>)</span><br><span class="line">                .multiple(<span class="literal">true</span>)</span><br><span class="line">                .help(<span class="string">&quot;optimize level&quot;</span>),</span><br><span class="line">        )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于这块代码的单元测试，我们可以使用<code>get_matches_from</code>来进行手动灌注参数调用。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[test]</span></span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">test_parse</span></span>() &#123;</span><br><span class="line">        <span class="keyword">let</span> arg_vec = <span class="built_in">vec!</span>[<span class="string">&quot;--&quot;</span>, <span class="string">&quot;-oo&quot;</span>, <span class="string">&quot;-c&quot;</span>, <span class="string">&quot;haha&quot;</span>];</span><br><span class="line">        <span class="keyword">let</span> matches = construct_app().get_matches_from(arg_vec); </span><br><span class="line">        <span class="built_in">assert!</span>(matches.is_present(<span class="string">&quot;optimize&quot;</span>));</span><br><span class="line">        <span class="built_in">assert_eq!</span>(matches.occurrences_of(<span class="string">&quot;optimize&quot;</span>), <span class="number">2</span>);</span><br><span class="line">        <span class="built_in">assert_eq!</span>(matches.value_of(<span class="string">&quot;config&quot;</span>), <span class="literal">Some</span>(<span class="string">&quot;haha&quot;</span>));</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a target="_blank" rel="noopener" href="https://rustcc.cn/article?id=921ad2c0-09af-4271-ae62-4b21ce281a2b">【Rust每周一库】Clap - 强大的命令行参数解析+帮助说明生成库</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Rust/" rel="tag"># Rust</a>
+              <a href="/tags/Clap/" rel="tag"># Clap</a>
+              <a href="/tags/%E6%AF%8F%E6%97%A5%E4%B8%80%E5%BA%93/" rel="tag"># 每日一库</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/08/12/legancy-code-war/" rel="prev" title="斗翔">
+      <i class="fa fa-chevron-left"></i> 斗翔
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/03/01/mybusinesstemplate/" rel="next" title="打造一套自己的业务开发模版">
+      打造一套自己的业务开发模版 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%98%E8%B5%B7"><span class="nav-number">1.</span> <span class="nav-text">缘起</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B"><span class="nav-number">2.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BF%AB%E9%80%9F%E4%BD%BF%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">快速使用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E6%95%B0%E7%B1%BB%E5%9E%8B"><span class="nav-number">4.</span> <span class="nav-text">参数类型</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%80%89%E9%A1%B9%E6%A0%BC%E5%BC%8F"><span class="nav-number">5.</span> <span class="nav-text">选项格式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%A6%E4%B8%80%E7%A7%8D%E5%AE%9A%E4%B9%89%E9%80%89%E9%A1%B9%E7%9A%84%E6%96%B9%E5%BC%8F"><span class="nav-number">6.</span> <span class="nav-text">另一种定义选项的方式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95"><span class="nav-number">7.</span> <span class="nav-text">测试</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">8.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Chaos"
+      src="/images/arch.png">
+  <p class="site-author-name" itemprop="name">Chaos</p>
+  <div class="site-description" itemprop="description">不以为耻，反以为荣</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/qingmo" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;qingmo" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Chaos</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">123k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

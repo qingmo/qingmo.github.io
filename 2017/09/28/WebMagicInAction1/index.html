@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"qingmo.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"8F0XRVWURW","apiKey":"ad6371526c987788e55f983ffa8bcb31","indexName":"blog","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="最近做了一个爬虫项目，经过了 从无框架的httpclient+jsoup，到使用webmagic，再到改造webmagic做定制化使用的三个阶段。接下来，我讲介绍一下我们在这个过程中获得的经验和夸过的一些坑。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WebMagicInAction1">
+<meta property="og:url" content="http://qingmo.github.io/2017/09/28/WebMagicInAction1/index.html">
+<meta property="og:site_name" content="Chaos&#39;s Blog">
+<meta property="og:description" content="最近做了一个爬虫项目，经过了 从无框架的httpclient+jsoup，到使用webmagic，再到改造webmagic做定制化使用的三个阶段。接下来，我讲介绍一下我们在这个过程中获得的经验和夸过的一些坑。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://code4craft.github.io/images/posts/webmagic.png">
+<meta property="article:published_time" content="2017-09-28T01:12:26.000Z">
+<meta property="article:modified_time" content="2023-01-28T07:55:12.803Z">
+<meta property="article:author" content="Chaos">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="爬虫">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://code4craft.github.io/images/posts/webmagic.png">
+
+<link rel="canonical" href="http://qingmo.github.io/2017/09/28/WebMagicInAction1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>WebMagicInAction1 | Chaos's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?2b44f5018cb8525a4d94479bc67f2882";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  <script>
+    !function(e,t,n,g,i){e[i]=e[i]||function(){(e[i].q=e[i].q||[]).push(arguments)},n=t.createElement("script"),tag=t.getElementsByTagName("script")[0],n.async=1,n.src=('https:'==document.location.protocol?'https://':'http://')+g,tag.parentNode.insertBefore(n,tag)}(window,document,"script","assets.growingio.com/2.1/gio.js","gio");
+    gio('init', 'UA-83160538-1', {});
+    gio('send');
+  </script>
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Chaos's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://qingmo.github.io/2017/09/28/WebMagicInAction1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/arch.png">
+      <meta itemprop="name" content="Chaos">
+      <meta itemprop="description" content="不以为耻，反以为荣">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Chaos's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          WebMagicInAction1
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-09-28 09:12:26" itemprop="dateCreated datePublished" datetime="2017-09-28T09:12:26+08:00">2017-09-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-01-28 15:55:12" itemprop="dateModified" datetime="2023-01-28T15:55:12+08:00">2023-01-28</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>最近做了一个爬虫项目，经过了 从无框架的httpclient+jsoup，到使用webmagic，再到改造webmagic做定制化使用的三个阶段。接下来，我讲介绍一下我们在这个过程中获得的经验和夸过的一些坑。</p>
+<span id="more"></span>
+<h2 id="蛮荒时代"><a href="#蛮荒时代" class="headerlink" title="蛮荒时代"></a>蛮荒时代</h2><p>这里引用webmagic的爬虫框架介绍。大多数爬虫框架的核心模块都是下载模块（Downloader),处理模块（PageProcessor),调度模块(Scheduler),持久化模块(Pipeline)<br><img src="http://code4craft.github.io/images/posts/webmagic.png" alt="webmagic核心模块图"><br>在蛮荒时代，我们的认知有限，或者说是迫于团队环境因数有限。我们都是自己造石器。物理机器只有一台。敌方信息有多种，我们都需要爬取。下载模块最开始使用的是HttpClient。需要顺序性爬取的任务，使用mysql数据库中的各种奇葩状态字段来记录。<br>程序猿A：id1的任务1完成啦，B你快点开工；id2的任务1失败了，B你别查哦<br>程序猿B满头大汗中。<br>上述就是我们基于tbschedule来调度爬取任务的过程。哦，对了tbschedule是我们目前使用的最好的分布式调度工具。所以它目前的身份是业务调度中心，爬虫调度器。<br>处理模块？放宽心啦。我们处理模块还和我们目前的业务代码绑得紧紧的。持久模块？不就是mysql的CURD么？</p>
+<p>考虑到2017年7月1日有一个互联网信息安全法的发布（货车帮都被抓走了那么多），虽然没有去恶意偷取别人信息，也没有去搞什么公民信息，但是为了安全。还是决定做一些拆分。爬虫就是爬虫，部署到外网服务器上去。业务是业务，就企业内部享受服务资源就行了。啊，上头开恩，给拨了2台机器了，好开明。</p>
+<p>爬虫服务器只负责接受爬取任务请求，然后通过合适的方式回传到内网的数据仓库，哦对了，至此有了数据仓库概念了。因为以前都是落表。要求数据一致性，规整性比较高。所以爬取的数据利用率也非常差。数据仓库就是搭的一台ES服务器。<br>接下来，调度模块的改造，我们用了一个rabbitmq来作为一个中间信息传递媒介，相当于一个调度器。入口节点的拉取完成后，分析模块将中间结果发送到mq的特定queue中。下一级的下载模块，通过消费端监听触发下载、分析，再到下一级，最后返回给业务服务器。<br>分离出来的页面处理模块得到了很好的利用，在后期调度器再次重构，下载模块更换过程中几乎都没有什么修改。<br>后面就是针对下载模块的不断尝试。预设目标中加入了动态页面需要进行获取信息。<a target="_blank" rel="noopener" href="https://github.com/ariya/phantomjs">phantomjs</a>+<a target="_blank" rel="noopener" href="http://www.seleniumhq.org/projects/webdriver/">selenium</a>的配合可以让我们无惧此类页面。但是这两者配合也有坑。<br>先说说phantomjs,如果设置为不加载图片，那么这个下载的速度，真心很爽。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">PhantomJSOptions pjsOption = <span class="keyword">new</span> PhantomJSOptions();</span><br><span class="line">PhantomJSDriverService pjsService =</span><br><span class="line">       PhantomJSDriverService.CreateDefaultService();</span><br><span class="line">pjsService.LoadImages = <span class="keyword">false</span>;</span><br><span class="line">PhantomJSDriver driver = <span class="keyword">new</span> PhantomJSDriver(pjsService, pjsOption);</span><br></pre></td></tr></table></figure>
+<p>但是长期使用的实际效果看来，特别容易崩。如果不使用此特性。那么下载速度特别慢。基本上都需要达到主动触发timeout</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">WebDriverWait webDriverWait = <span class="keyword">new</span> WebDriverWait(phantomJsServer.getWebDriver(), <span class="number">5</span>);</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">	phantomJsServer.getWebDriver().get(<span class="string">&quot;https://ju.suning.com/&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">	LOGGER.warn(<span class="string">&quot;加载苏宁促销页面超时&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">	webDriverWait.until(ExpectedConditionsMine.presenceOfElementLocated(By.cssSelector(<span class="string">&quot;#topCats &gt; ul&quot;</span>)));</span><br><span class="line">&#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">	LOGGER.error(<span class="string">&quot;等待加载关键元素超时&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>由此，可以主动缩短其完全加载时间，只需要等待目标元素加载成功即可。速度相对提高，迈过这个坎。<br>phantomjs配合selenium的使用过程中，还遇到一个问题就是，内存与实例数的暴涨。由于请求到来的不确定性。是否开启新的phantomjs实例没有良好的设计，造成服务器假死。先控制了一个phantomjs实例最多开启50个tab页来控制。然后引入akka actor来控制phantomjs的实例开启，逐渐弱化mq的调度功能，改用actor的route来控制。</p>
+<p>啊，作为现代人，蛮荒时代是多么的可怕，怎么还不结束，我都写的郁闷了，可见当时做的有多么郁闷。新加一个爬取元素，需要梳理整个流程。去冲控制？没有。延时？想通了就各自在自己顺眼的地方加一个sleep。统一配置？别想了。</p>
+<h2 id="洋务运动"><a href="#洋务运动" class="headerlink" title="洋务运动"></a>洋务运动</h2><p>团队走了人又加了人，我还是那个混世大魔王，不愿意让项目腐朽下去。决定自己先一个人摸索好一个目标网站的爬取。webmagic其实很早就接触过，当时只知道这工具是做爬虫的。然后对比了一下其他几个类似的项目，其实都在像scrapy致敬，但是当时的我不懂爬虫。其实这个阶段没有多少参考性，独立的工程，就在自己的开发机器上运行，然后用logstash将爬取好的数据推到线上es中去。这里最主要做的事就是一个人同时做多个网站的爬取，同时将webmagic先推荐给团队的其他同事，觉得好的就一起选择这种模式来爬取，当然中间也遇到很多怀疑的问题，然后自己会的直接回答。不会的就去翻翻源码，看看文档再来回答。</p>
+<h2 id="创新实践"><a href="#创新实践" class="headerlink" title="创新实践"></a>创新实践</h2><p>团队目标网站有6个大型网站，最开始一个人维护两个。后面有3个网站都开始使用了webmagic框架。期间又加了一台外网机器作为爬虫机器。这个时候，3个爬虫工程要进行整合，脱离靠人来触发爬取的时代了。这个时候就看到了webmagic提供的<a target="_blank" rel="noopener" href="https://github.com/code4craft/webmagic/blob/master/webmagic-extension/src/main/java/us/codecraft/webmagic/scheduler/RedisScheduler.java">RedisSpider</a>。作者提供了<a target="_blank" rel="noopener" href="https://github.com/code4craft/webmagic/blob/master/webmagic-samples/src/main/java/us/codecraft/webmagic/samples/F58PageProcesser.java">F58PageProcessor</a>, <a target="_blank" rel="noopener" href="https://github.com/code4craft/webmagic/blob/master/webmagic-samples/src/main/java/us/codecraft/webmagic/model/samples/News163.java">News163</a>,<a target="_blank" rel="noopener" href="https://github.com/code4craft/webmagic/blob/master/webmagic-samples/src/main/java/us/codecraft/webmagic/model/samples/JokejiModel.java">JokejiModel</a>这三个demo例子。但是实际上同时运行2个不同的spider实例并不会并发的分布式爬取对应的任务，任务仍然还在一个spider上实例上跑得飞起。<br>通过仔细分析RedisScheduler源码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">    public synchronized Request poll(Task task) &#123;</span><br><span class="line">        Jedis jedis &#x3D; pool.getResource();</span><br><span class="line">        try &#123;</span><br><span class="line">            String url &#x3D; jedis.lpop(getQueueKey(task));</span><br><span class="line">            if (url &#x3D;&#x3D; null) &#123;</span><br><span class="line">                return null;</span><br><span class="line">            &#125;</span><br><span class="line">            String key &#x3D; ITEM_PREFIX + task.getUUID();</span><br><span class="line">            String field &#x3D; DigestUtils.shaHex(url);</span><br><span class="line">            byte[] bytes &#x3D; jedis.hget(key.getBytes(), field.getBytes());</span><br><span class="line">            if (bytes !&#x3D; null) &#123;</span><br><span class="line">                Request o &#x3D; JSON.parseObject(new String(bytes), Request.class);</span><br><span class="line">                return o;</span><br><span class="line">            &#125;</span><br><span class="line">                Request request &#x3D; new Request(url);</span><br><span class="line">            return request;</span><br><span class="line">        &#125; finally &#123;</span><br><span class="line">            pool.returnResource(jedis);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    protected String getQueueKey(Task task) &#123;</span><br><span class="line">        return QUEUE_PREFIX + task.getUUID();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>spider实例（task）必须拥有相同的UUID才能共享redis中的待执行任务队列。同时这个通过这个上面，也遇到了一个redis使用方面的坑。webmagic对于redis的清理只有<code>resetDuplicateCheck</code>。这里的清理只清理掉了RedisScheduler三个key中的set_，还有queue_与item_，其中queue_与set_一样存放的是纯URL,item_中存放的是request对象。因为webmagic为了实现类似scrapy中的yeild效果。这里暂存了所有中间过程的Request。如果你不小心的在Request的extra中使用了比较大的数据。那么redis轻轻松松的膨胀了。</p>
+<p>参考<a target="_blank" rel="noopener" href="https://github.com/rmax/scrapy-redis">scrapy-redis</a>中的scheduler.flush方法。也扩展了一个flush方法，具体请<a target="_blank" rel="noopener" href="https://github.com/code4craft/webmagic/pull/672">参见</a><br>但是这里还不够。因为没有合适的调用时机来调用flush，唯一能调用flush的时机是在爬取开始，或者爬取完成时，但是当我们爬取一个巨量网站时，顺序话要求相对比较高，频繁使用Request的extra属性，item膨胀的十分厉害，实际爬取中，爬取任务大概完成了60%左右时，内存占用2g-3g。如果是一个普通的2c4g云服务器，这太庞大了。于是我们深度定制了一个RedisSpider，在其onSuccess方法中添加</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">protected void onSuccess(Request request) &#123;</span><br><span class="line">    if (scheduler instanceof MyRedisScheduler) &#123;</span><br><span class="line">        ((MyRedisScheduler) scheduler).cleanItem(this, request);</span><br><span class="line">    &#125;</span><br><span class="line">    if (CollectionUtils.isNotEmpty(spiderListeners)) &#123;</span><br><span class="line">        spiderListeners.forEach(l-&gt;l.onSuccess(request));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>MyRedisScheduler.java</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;**</span><br><span class="line">* clean target redis item key</span><br><span class="line">* @param task target task</span><br><span class="line">* @param request completed request</span><br><span class="line">*&#x2F;</span><br><span class="line">public void cleanItem(Task task, Request request) &#123;</span><br><span class="line">    Jedis jedis &#x3D; pool.getResource();</span><br><span class="line">    try &#123;</span><br><span class="line">        String key &#x3D; ITEM_PREFIX + task.getUUID();</span><br><span class="line">        String field &#x3D; DigestUtils.sha1Hex(request.getUrl());</span><br><span class="line">        jedis.hdel(key.getBytes(), field.getBytes());</span><br><span class="line">    &#125; finally &#123;</span><br><span class="line">        jedis.close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样item_中只会保留当前待处理或正在处理中的Request对象。Redis得到全身心的放松了。</p>
+<p>接下来的改造就不一定适用于所有场景了。我仔细看了Spider中的run方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public void run() &#123;</span><br><span class="line">    checkRunningStat();</span><br><span class="line">    initComponent();</span><br><span class="line">    logger.info(&quot;Spider &#123;&#125; started!&quot;,getUUID());</span><br><span class="line">    while (!Thread.currentThread().isInterrupted() &amp;&amp; stat.get() &#x3D;&#x3D; STAT_RUNNING) &#123;</span><br><span class="line">        final Request request &#x3D; scheduler.poll(this);</span><br><span class="line">        if (request &#x3D;&#x3D; null) &#123;</span><br><span class="line">            if (threadPool.getThreadAlive() &#x3D;&#x3D; 0 &amp;&amp; exitWhenComplete) &#123;</span><br><span class="line">                break;</span><br><span class="line">            &#125;</span><br><span class="line">            &#x2F;&#x2F; wait until new url added</span><br><span class="line">            waitNewUrl();</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            threadPool.execute(new Runnable() &#123;</span><br><span class="line">                @Override</span><br><span class="line">                public void run() &#123;</span><br><span class="line">                    try &#123;</span><br><span class="line">                        processRequest(request);</span><br><span class="line">                        onSuccess(request);</span><br><span class="line">                    &#125; catch (Exception e) &#123;</span><br><span class="line">                        onError(request);</span><br><span class="line">                        logger.error(&quot;process request &quot; + request + &quot; error&quot;, e);</span><br><span class="line">                    &#125; finally &#123;</span><br><span class="line">                        pageCount.incrementAndGet();</span><br><span class="line">                        signalNewUrl();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    stat.set(STAT_STOPPED);</span><br><span class="line">    &#x2F;&#x2F; release some resources</span><br><span class="line">    if (destroyWhenExit) &#123;</span><br><span class="line">        close();</span><br><span class="line">    &#125;</span><br><span class="line">    logger.info(&quot;Spider &#123;&#125; closed! &#123;&#125; pages downloaded.&quot;, getUUID(), pageCount.get());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的listener监听回调只有每一个Request完成或失败后的onSuccess，onError。但是实际业务场景中，我们真的关心每一条数据的成功与失败么？一般都不会。如果爬取40w的数据量，掉几百条一般都是可以容忍的。在本项目中，真正看起来更加具有实用性的监听应该是一个批次任务完成，或整个实例的完成状态。<br>所以我们扩展了listener为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public interface RedisSpiderListener extends SpiderListener &#123;</span><br><span class="line"></span><br><span class="line">    void onFinish(Task task);</span><br><span class="line"></span><br><span class="line">    void onComplete(Task task);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>并直接重写了Spider的run方法为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public void run() &#123;</span><br><span class="line">    checkRunningStat();</span><br><span class="line">    initComponent();</span><br><span class="line">    logger.info(&quot;Spider &#123;&#125; started!&quot;,getUUID());</span><br><span class="line">    Jedis jedis &#x3D; pool.getResource();</span><br><span class="line">    while (!Thread.currentThread().isInterrupted()</span><br><span class="line">            &amp;&amp; StringUtils.equalsIgnoreCase(jedis.get(getStatusKey()), Integer.toString(STAT_RUNNING))) &#123;</span><br><span class="line">        final Request request &#x3D; scheduler.poll(this);</span><br><span class="line">        if (request &#x3D;&#x3D; null) &#123;</span><br><span class="line">            if (threadPool.getThreadAlive() &#x3D;&#x3D; 0 &amp;&amp; exitWhenComplete) &#123;</span><br><span class="line">                break;</span><br><span class="line">            &#125;</span><br><span class="line">            if (threadPool.getThreadAlive() &#x3D;&#x3D; 0) &#123;</span><br><span class="line">                onFinish();</span><br><span class="line">            &#125;</span><br><span class="line">            &#x2F;&#x2F; wait until new url added</span><br><span class="line">            waitNewUrl();</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            threadPool.execute(new Runnable() &#123;</span><br><span class="line">                @Override</span><br><span class="line">                public void run() &#123;</span><br><span class="line">                    try &#123;</span><br><span class="line">                        processRequest(request);</span><br><span class="line">                        onSuccess(request);</span><br><span class="line">                    &#125; catch (Exception e) &#123;</span><br><span class="line">                        onError(request);</span><br><span class="line">                        logger.error(&quot;process request &quot; + request + &quot; error&quot;, e);</span><br><span class="line">                    &#125; finally &#123;</span><br><span class="line">                        pageCount.incrementAndGet();</span><br><span class="line">                        signalNewUrl();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    compareAndSetStat(STAT_STOPPED);</span><br><span class="line">    &#x2F;&#x2F; release some resources</span><br><span class="line">    if (destroyWhenExit) &#123;</span><br><span class="line">        close();</span><br><span class="line">    &#125;</span><br><span class="line">    onComplete();</span><br><span class="line">    logger.info(&quot;Spider &#123;&#125; closed! &#123;&#125; pages downloaded.&quot;, getUUID(), pageCount.get());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>扩展现有webmagic的回调。因为是将spider与web服务配合在一起，所以exitWhenComplete配置为false，用的更多的是onFinish。实际效果看起来还不错。<br>webmagic的挖掘与学习之旅还很长，虽然是一个简单框架。但是看得出作者还是花了很多心思在上面的。感谢！</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Java/" rel="tag"># Java</a>
+              <a href="/tags/%E7%88%AC%E8%99%AB/" rel="tag"># 爬虫</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2017/10/26/%E8%AE%B0%E5%BD%95%E4%B8%80%E6%AC%A1elasticsearch%E4%B8%AD%E6%96%87%E6%90%9C%E7%B4%A2%E9%85%8D%E7%BD%AE-md/" rel="next" title="记录一次elasticsearch中文搜索配置">
+      记录一次elasticsearch中文搜索配置 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%9B%AE%E8%8D%92%E6%97%B6%E4%BB%A3"><span class="nav-number">1.</span> <span class="nav-text">蛮荒时代</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B4%8B%E5%8A%A1%E8%BF%90%E5%8A%A8"><span class="nav-number">2.</span> <span class="nav-text">洋务运动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E6%96%B0%E5%AE%9E%E8%B7%B5"><span class="nav-number">3.</span> <span class="nav-text">创新实践</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Chaos"
+      src="/images/arch.png">
+  <p class="site-author-name" itemprop="name">Chaos</p>
+  <div class="site-description" itemprop="description">不以为耻，反以为荣</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/qingmo" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;qingmo" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Chaos</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">123k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"qingmo.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"8F0XRVWURW","apiKey":"ad6371526c987788e55f983ffa8bcb31","indexName":"blog","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="这里以Quarkus的GET STARTED项目为例，主要此项目使用到了quarkus-universe-bom依赖管理及特殊的编译插件。 准备先下载项目 123456mvn io.quarkus:quarkus-maven-plugin:1.13.0.Final:create \    -DprojectGroupId&#x3D;org.acme \    -DprojectArtifactId&#x3D;gett">
+<meta property="og:type" content="article">
+<meta property="og:title" content="maven迁移至gradle kotlin1——Quarkus篇">
+<meta property="og:url" content="http://qingmo.github.io/2021/03/31/mirgrate-maven-to-gradle-kotlin-dsl-quarkus/index.html">
+<meta property="og:site_name" content="Chaos&#39;s Blog">
+<meta property="og:description" content="这里以Quarkus的GET STARTED项目为例，主要此项目使用到了quarkus-universe-bom依赖管理及特殊的编译插件。 准备先下载项目 123456mvn io.quarkus:quarkus-maven-plugin:1.13.0.Final:create \    -DprojectGroupId&#x3D;org.acme \    -DprojectArtifactId&#x3D;gett">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-03-31T10:32:12.000Z">
+<meta property="article:modified_time" content="2023-01-28T07:55:12.804Z">
+<meta property="article:author" content="Chaos">
+<meta property="article:tag" content="kotlin">
+<meta property="article:tag" content="gradle">
+<meta property="article:tag" content="quarkus">
+<meta property="article:tag" content="maven">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://qingmo.github.io/2021/03/31/mirgrate-maven-to-gradle-kotlin-dsl-quarkus/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>maven迁移至gradle kotlin1——Quarkus篇 | Chaos's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?2b44f5018cb8525a4d94479bc67f2882";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  <script>
+    !function(e,t,n,g,i){e[i]=e[i]||function(){(e[i].q=e[i].q||[]).push(arguments)},n=t.createElement("script"),tag=t.getElementsByTagName("script")[0],n.async=1,n.src=('https:'==document.location.protocol?'https://':'http://')+g,tag.parentNode.insertBefore(n,tag)}(window,document,"script","assets.growingio.com/2.1/gio.js","gio");
+    gio('init', 'UA-83160538-1', {});
+    gio('send');
+  </script>
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Chaos's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://qingmo.github.io/2021/03/31/mirgrate-maven-to-gradle-kotlin-dsl-quarkus/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/arch.png">
+      <meta itemprop="name" content="Chaos">
+      <meta itemprop="description" content="不以为耻，反以为荣">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Chaos's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          maven迁移至gradle kotlin1——Quarkus篇
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-03-31 18:32:12" itemprop="dateCreated datePublished" datetime="2021-03-31T18:32:12+08:00">2021-03-31</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-01-28 15:55:12" itemprop="dateModified" datetime="2023-01-28T15:55:12+08:00">2023-01-28</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这里以<a target="_blank" rel="noopener" href="https://quarkus.io/"><code>Quarkus</code></a>的<code>GET STARTED</code>项目为例，主要此项目使用到了<code>quarkus-universe-bom</code>依赖管理及特殊的编译插件。</p>
+<h2 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h2><p>先下载项目</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mvn io.quarkus:quarkus-maven-plugin:1.13.0.Final:create \</span><br><span class="line">    -DprojectGroupId=org.acme \</span><br><span class="line">    -DprojectArtifactId=getting-started \</span><br><span class="line">    -DclassName=&quot;org.acme.getting.started.GreetingResource&quot; \</span><br><span class="line">    -Dpath=&quot;/hello&quot;</span><br><span class="line">cd getting-started</span><br></pre></td></tr></table></figure>
+
+<h2 id="迁移"><a href="#迁移" class="headerlink" title="迁移"></a>迁移</h2><span id="more"></span>
+<p>先使用<code>gradle init</code>将maven项目转化为<code>gradle with groovy dsl</code>项目</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> gradle init</span>                                                                 </span><br><span class="line">Found a Maven build. Generate a Gradle build from this? (default: yes) [yes, no] yes</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> Task :init</span></span><br><span class="line">Maven to Gradle conversion is an incubating feature.</span><br><span class="line">Get more help with your project: https://docs.gradle.org/6.5.1/userguide/migrating_from_maven.html</span><br><span class="line"></span><br><span class="line">BUILD SUCCESSFUL in 7s</span><br><span class="line">2 actionable tasks: 2 executed</span><br></pre></td></tr></table></figure>
+
+<h3 id="手动操作"><a href="#手动操作" class="headerlink" title="手动操作"></a>手动操作</h3><p><em><em>Step 1: 把</em>.gradle文件中的单引号换为双引号</em>*</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sed  &#x27;s/&#x27;&quot;&#x27;/&quot;&#x27;&quot;/g&#x27; settings.gradle &gt; settings.gradle.kts</span><br><span class="line">sed  &#x27;s/&#x27;&quot;&#x27;/&quot;&#x27;&quot;/g&#x27; build.gradle &gt; build.gradle.kts</span><br><span class="line">rm -rf settings.gradle build.gradle</span><br></pre></td></tr></table></figure>
+
+<p><strong>Step 2: 修改<code>dependencies</code>依赖添加括号</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    implementation(<span class="string">&quot;io.quarkus:quarkus-arc:1.13.0.Final&quot;</span>)</span><br><span class="line">    implementation(<span class="string">&quot;io.quarkus:quarkus-resteasy:1.13.0.Final&quot;</span>)</span><br><span class="line">    testImplementation(<span class="string">&quot;io.quarkus:quarkus-junit5:1.13.0.Final&quot;</span>)</span><br><span class="line">    testImplementation(<span class="string">&quot;io.rest-assured:rest-assured:4.3.3&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>Step 3: 修改<code>plugins</code></strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">plugins &#123;</span><br><span class="line">    java</span><br><span class="line">    `maven-publish`</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>Step 4: 修改java配置</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">java &#123;</span><br><span class="line">    sourceCompatibility = JavaVersion.VERSION_1_8</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>Step 5: 修改<code>JavaCompile</code>任务配置</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tasks.withType&lt;JavaCompile&gt; &#123;</span><br><span class="line">    options.encoding = <span class="string">&quot;UTF-8&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>Step 6: 修改<code>maven-publish</code>配置</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">publishing &#123;</span><br><span class="line">    publications &#123;</span><br><span class="line">        create&lt;MavenPublication&gt;(<span class="string">&quot;maven&quot;</span>) &#123;</span><br><span class="line">            from(components[<span class="string">&quot;java&quot;</span>])</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>Step 7: 修改依赖配置</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    implementation(enforcedPlatform(<span class="string">&quot;io.quarkus:quarkus-universe-bom:1.13.0.Final&quot;</span>))</span><br><span class="line">    implementation(<span class="string">&quot;io.quarkus:quarkus-arc&quot;</span>)</span><br><span class="line">    implementation(<span class="string">&quot;io.quarkus:quarkus-resteasy&quot;</span>)</span><br><span class="line">    testImplementation(<span class="string">&quot;io.quarkus:quarkus-junit5&quot;</span>)</span><br><span class="line">    testImplementation(<span class="string">&quot;io.rest-assured:rest-assured&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里使用<code>enforcedPlatform</code>关键字引入<code>bom</code>依赖管理</p>
+<p><strong>Step 8: 添加<code>quarkus</code>插件依赖</strong></p>
+<p><code>settings.gradle.kts</code></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">pluginManagement &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        mavenLocal()</span><br><span class="line">        mavenCentral()</span><br><span class="line">        gradlePluginPortal()</span><br><span class="line">    &#125;</span><br><span class="line">    plugins &#123;</span><br><span class="line">        id(<span class="string">&quot;io.quarkus&quot;</span>) version <span class="string">&quot;1.13.0.Final&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>build.gradle.kts</code></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">plugins &#123;</span><br><span class="line">    java</span><br><span class="line">    `maven-publish`</span><br><span class="line">    id(<span class="string">&quot;io.quarkus&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew quarkusDev</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> http :8080/hello</span></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Connection: keep-alive</span><br><span class="line">Content-Length: 14</span><br><span class="line">Content-Type: text/plain;charset=UTF-8</span><br><span class="line">Keep-Alive: timeout=4</span><br><span class="line">Proxy-Connection: keep-alive</span><br><span class="line"></span><br><span class="line">Hello RESTEasy</span><br></pre></td></tr></table></figure>
+
+<p>以上，完成。根据<code>Quarkus</code>官方说法，目前<code>gradle</code>的支持不在预期考虑范围内。不建议在生产型工程上使用。</p>
+<h2 id="更多扩展"><a href="#更多扩展" class="headerlink" title="更多扩展"></a>更多扩展</h2><p>下列步骤并非必须，而是个人兴趣的扩展——<code>kotlin</code>开发<code>Quarkus</code>支持</p>
+<p><strong>Step1: 添加kotlin插件</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">plugins &#123;</span><br><span class="line">...</span><br><span class="line">    kotlin(<span class="string">&quot;jvm&quot;</span>) version <span class="string">&quot;1.4.32&quot;</span></span><br><span class="line">    id(<span class="string">&quot;org.jetbrains.kotlin.plugin.allopen&quot;</span>) version <span class="string">&quot;1.4.32&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>Step2: 配置allOpen插件</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">allOpen &#123;</span><br><span class="line">    <span class="keyword">annotation</span>(<span class="string">&quot;javax.ws.rs.Path&quot;</span>)</span><br><span class="line">    <span class="keyword">annotation</span>(<span class="string">&quot;javax.enterprise.context.ApplicationScoped&quot;</span>)</span><br><span class="line">    <span class="keyword">annotation</span>(<span class="string">&quot;io.quarkus.test.junit.QuarkusTest&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>Step2: 添加kotlin依赖</strong></p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">  implementation(kotlin(<span class="string">&quot;stdlib-jdk8&quot;</span>))</span><br><span class="line">	implementation(<span class="string">&quot;io.quarkus:quarkus-kotlin&quot;</span>)</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的<code>quarkus-kotlin</code>用于支持quarkus的特殊特性，如<code>liveEdit</code></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/mengdd/p/android-gradle-migrate-from-groovy-to-kotlin.html">Android Gradle从Groovy迁移到Kotlin</a></p>
+<p><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/ask/142689">如何将gradle中的groovy任务转换为Gradle Kotlin DSL以生成pom.xml？</a></p>
+<p><a target="_blank" rel="noopener" href="https://docs.gradle.org/current/userguide/migrating_from_groovy_to_kotlin_dsl.html">Migrating build logic from Groovy to Kotlin</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/u012586326/article/details/113746510">使用Gradle生成BOM管理依赖版本</a></p>
+<p><a target="_blank" rel="noopener" href="https://docs.gradle.org/current/userguide/java_platform_plugin.html#header">The Java Platform Plugin</a></p>
+<p><a target="_blank" rel="noopener" href="https://quarkus.io/guides/gradle-tooling">BUILDING QUARKUS APPS WITH GRADLE</a></p>
+<p><a target="_blank" rel="noopener" href="https://quarkus.io/guides/kotlin">QUARKUS - USING KOTLIN</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/kotlin/" rel="tag"># kotlin</a>
+              <a href="/tags/gradle/" rel="tag"># gradle</a>
+              <a href="/tags/quarkus/" rel="tag"># quarkus</a>
+              <a href="/tags/maven/" rel="tag"># maven</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/03/25/Gradle%E4%B8%AD%E9%85%8D%E7%BD%AESpringBoot%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%82%E6%95%B0/" rel="prev" title="Gradle中配置SpringBoot环境配置参数">
+      <i class="fa fa-chevron-left"></i> Gradle中配置SpringBoot环境配置参数
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/08/12/legancy-code-war/" rel="next" title="斗翔">
+      斗翔 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%86%E5%A4%87"><span class="nav-number">1.</span> <span class="nav-text">准备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%81%E7%A7%BB"><span class="nav-number">2.</span> <span class="nav-text">迁移</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%8B%E5%8A%A8%E6%93%8D%E4%BD%9C"><span class="nav-number">2.1.</span> <span class="nav-text">手动操作</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95"><span class="nav-number">3.</span> <span class="nav-text">测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9B%B4%E5%A4%9A%E6%89%A9%E5%B1%95"><span class="nav-number">4.</span> <span class="nav-text">更多扩展</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Chaos"
+      src="/images/arch.png">
+  <p class="site-author-name" itemprop="name">Chaos</p>
+  <div class="site-description" itemprop="description">不以为耻，反以为荣</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">17</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/qingmo" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;qingmo" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Chaos</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">123k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">1:52</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
