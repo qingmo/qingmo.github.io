@@ -20,30 +20,33 @@
     var CONFIG = {"hostname":"qingmo.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"8F0XRVWURW","apiKey":"ad6371526c987788e55f983ffa8bcb31","indexName":"blog","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="不以为耻，反以为荣">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Chaos&#39;s Blog">
-<meta property="og:url" content="http://qingmo.github.io/index.html">
+  <meta name="description" content="教训：nacos配置一定要验证可用性之后再去验证性能 feign+okhttp 与 feign+httpclient开启压缩的方式是不一样的！ 服务端返回值开启压缩服务端添加配置 12345678910server:  compression:    enabled: true    min-response-size: 100    mime-type:      - text&#x2F;html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="feign开启压缩配置（okhttp3&amp;&amp;httpclient）">
+<meta property="og:url" content="http://qingmo.github.io/2023/02/03/feign-compression-config/index.html">
 <meta property="og:site_name" content="Chaos&#39;s Blog">
-<meta property="og:description" content="不以为耻，反以为荣">
+<meta property="og:description" content="教训：nacos配置一定要验证可用性之后再去验证性能 feign+okhttp 与 feign+httpclient开启压缩的方式是不一样的！ 服务端返回值开启压缩服务端添加配置 12345678910server:  compression:    enabled: true    min-response-size: 100    mime-type:      - text&#x2F;html">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-02-03T02:06:14.000Z">
+<meta property="article:modified_time" content="2023-02-03T12:29:18.919Z">
 <meta property="article:author" content="Chaos">
+<meta property="article:tag" content="Java">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://qingmo.github.io/">
+<link rel="canonical" href="http://qingmo.github.io/2023/02/03/feign-compression-config/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>Chaos's Blog</title>
+  <title>feign开启压缩配置（okhttp3&&httpclient） | Chaos's Blog</title>
   
 
 
@@ -160,9 +163,10 @@
         <div class="content-wrap">
           
 
-          <div class="content index posts-expand">
+          <div class="content post posts-expand">
             
-      
+
+    
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
@@ -178,10 +182,9 @@
       <meta itemprop="name" content="Chaos's Blog">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/02/03/feign-compression-config/" class="post-title-link" itemprop="url">feign开启压缩配置（okhttp3&&httpclient）</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          feign开启压缩配置（okhttp3&&httpclient）
+        </h1>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -195,6 +198,13 @@
             </span>
 
           
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
 
         </div>
       </header>
@@ -205,7 +215,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>教训：<em>nacos配置一定要验证可用性之后再去验证性能</em></p>
+        <p>教训：<em>nacos配置一定要验证可用性之后再去验证性能</em></p>
 <p>feign+okhttp 与 feign+httpclient开启压缩的方式是不一样的！</p>
 <h2 id="服务端返回值开启压缩"><a href="#服务端返回值开启压缩" class="headerlink" title="服务端返回值开启压缩"></a>服务端返回值开启压缩</h2><p>服务端添加配置</p>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">server:</span></span><br><span class="line">  <span class="attr">compression:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">min-response-size:</span> <span class="number">100</span></span><br><span class="line">    <span class="attr">mime-type:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">text/html</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">text/xml</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">application/xml</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">application/octet-stream</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">application/json</span></span><br></pre></td></tr></table></figure>
@@ -258,719 +268,34 @@
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>io.github.openfeign<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>feign-okhttp<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">version</span>&gt;</span>$&#123;version.feign.okhttp&#125;<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
 
 
-      
     </div>
 
     
     
     
+
       <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
+          <div class="post-tags">
+              <a href="/tags/Java/" rel="tag"># Java</a>
+          </div>
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://qingmo.github.io/2023/02/02/final-static-spock-test/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/arch.png">
-      <meta itemprop="name" content="Chaos">
-      <meta itemprop="description" content="不以为耻，反以为荣">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Chaos's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/02/02/final-static-spock-test/" class="post-title-link" itemprop="url">Spock单元测试中针对final static的处理</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2023-02-02 12:06:54 / 修改时间：14:59:22" itemprop="dateCreated datePublished" datetime="2023-02-02T12:06:54+08:00">2023-02-02</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>在做单元测试过程中，我们常常需要对某些字段进行注入<code>Mock</code>。</p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> reflectSet(Test target, String fieldName, Object value) &#123;</span><br><span class="line">  <span class="keyword">def</span> field = Test.getDeclaredField(fieldName)</span><br><span class="line">  field.setAccessible(<span class="literal">true</span>)</span><br><span class="line">  field.set(target, value)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>但是有一类数据我们是不方便注入的，例如：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Slf4j</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testLog</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  	log.info(<span class="string">&quot;testLog&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>或</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> Logger log = LoggerFactory.get(Test.class);</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testLog</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  	log.info(<span class="string">&quot;testLog&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>如果我们需要对log的行为进行测试，那么这里的注入应该怎么搞呢？</p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="string">&quot;test&quot;</span>() &#123;</span><br><span class="line">       <span class="symbol">given:</span></span><br><span class="line">       <span class="keyword">def</span> log = Mock(Logger)</span><br><span class="line">       <span class="keyword">def</span> test = <span class="keyword">new</span> Test()</span><br><span class="line">       reflectSetFinalStatic(test, <span class="string">&quot;log&quot;</span>, log)</span><br><span class="line">       <span class="symbol">when:</span></span><br><span class="line">       service.testLog()</span><br><span class="line">       <span class="symbol">then:</span></span><br><span class="line">       <span class="number">1</span> * log.info(_) &gt;&gt; &#123;</span><br><span class="line">           args-&gt;&#123;</span><br><span class="line">               <span class="keyword">assert</span> args[<span class="number">0</span>] == <span class="string">&quot;testLog&quot;</span></span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       noExceptionThrown()</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   <span class="keyword">void</span> reflectSetFinalStatic(Test target, String fieldName, Object value) &#123;</span><br><span class="line">       <span class="keyword">def</span> field = Test.getDeclaredField(fieldName)</span><br><span class="line">       field.setAccessible(<span class="literal">true</span>)</span><br><span class="line">       <span class="comment">// 修改访问权限</span></span><br><span class="line">       <span class="keyword">def</span> modifiers = field.getClass().getDeclaredField(<span class="string">&quot;modifiers&quot;</span>)</span><br><span class="line">       modifiers.setAccessible(<span class="literal">true</span>)</span><br><span class="line">       modifiers.setInt(field, field.getModifiers() &amp; ~Modifier.FINAL)</span><br><span class="line">       field.set(target, value)</span><br><span class="line">       <span class="comment">// 恢复访问权限</span></span><br><span class="line">       modifiers.setInt(field, field.getModifiers() &amp; Modifier.FINAL)</span><br><span class="line"></span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
-
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://qingmo.github.io/2023/01/28/mysql-tx-analysis/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/arch.png">
-      <meta itemprop="name" content="Chaos">
-      <meta itemprop="description" content="不以为耻，反以为荣">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Chaos's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/01/28/mysql-tx-analysis/" class="post-title-link" itemprop="url">mysql事务日志分析</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2023-01-28 15:57:02 / 修改时间：16:02:56" itemprop="dateCreated datePublished" datetime="2023-01-28T15:57:02+08:00">2023-01-28</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>java操作mysql过程中，发现部分操作耗时是在事务过程中的，可以通过以下方法来进行定位。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">-- 查看日志是否开启</span><br><span class="line">show variables like &#39;general_log&#39;;</span><br><span class="line">-- 开启日志</span><br><span class="line">set global general_log&#x3D;on; </span><br><span class="line">--查看通用日志位置</span><br><span class="line">show variables like &#39;%general_log_file%&#39;</span><br></pre></td></tr></table></figure>
-
-<p>通过监控日志详情，发现事务过程中有大量的<code>select @@SESSION.&#39;tx_read_only&#39;</code>指令伴随事务在执行。</p>
-<p>通过配置mysql连接，加入参数<code>useLocalSessionState=true</code>得到解决。</p>
-<p>详细代码栈：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ConnectionImpl.isReadOnly</span><br></pre></td></tr></table></figure>
-
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://qingmo.github.io/2022/05/10/use-redis-distributed-lock-safety/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/arch.png">
-      <meta itemprop="name" content="Chaos">
-      <meta itemprop="description" content="不以为耻，反以为荣">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Chaos's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/05/10/use-redis-distributed-lock-safety/" class="post-title-link" itemprop="url">安全的使用redis分布式锁</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-05-10 14:49:19" itemprop="dateCreated datePublished" datetime="2022-05-10T14:49:19+08:00">2022-05-10</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-01-28 15:55:12" itemprop="dateModified" datetime="2023-01-28T15:55:12+08:00">2023-01-28</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><p>问题描述：你在使用分布式锁对代码加一个锁，会不会业务没有执行完，锁释放了？</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setnx?set?</span><br></pre></td></tr></table></figure>
-
-<p>如果回答setnx就掉入一个坑了</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setnx key value</span><br></pre></td></tr></table></figure>
-
-<p>没有过期时间？没有过期时间就意味着我们必须有可靠且安全的措施保障最终锁能被我们自己手动释放，如以下代码</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (setnx(<span class="string">&#x27;key&#x27;</span>, <span class="number">1</span>)) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// do buisness</span></span><br><span class="line">    &#125; <span class="keyword">catch</span>(Exception e) &#123;</span><br><span class="line">        <span class="comment">// handle exception</span></span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="comment">// release lock</span></span><br><span class="line">        del(<span class="string">&#x27;key&#x27;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>有了finally是不是就真的安全了？tomcat崩了，jvm死了，机器断电，遭雷劈了？</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/05/10/use-redis-distributed-lock-safety/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
-    </div>
 
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://qingmo.github.io/2022/04/27/swaggertoword/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/arch.png">
-      <meta itemprop="name" content="Chaos">
-      <meta itemprop="description" content="不以为耻，反以为荣">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Chaos's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/04/27/swaggertoword/" class="post-title-link" itemprop="url">swaggertoword</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-04-27 12:58:39" itemprop="dateCreated datePublished" datetime="2022-04-27T12:58:39+08:00">2022-04-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-01-28 15:55:12" itemprop="dateModified" datetime="2023-01-28T15:55:12+08:00">2023-01-28</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>通常我们在服务提供交互时，经常会被要求提供<code>api</code>文档，各种情况和格式要求都会有，如<code>pdf</code>，<code>showdoc</code>，<code>word</code>以及<code>html</code>等。其中做甲方项目的苦力面对最多的就是我们今天的目的格式<code>word</code>。<code>swagger2</code>有很多现成的可以支持的（可不可用需要自己测试），但是我为了偷懒文档生成，直接使用了最新的<code>swagger3</code>，接下来就是我不断折腾找工具，改工具的过程记录和最后的缝合怪。</p>
-<h2 id="折腾"><a href="#折腾" class="headerlink" title="折腾"></a>折腾</h2><blockquote>
-<p>经过搜索后找到一个不能用的<code>swagger2word</code>，而且只支持<code>swagger2</code>。看了几眼，改造成本过大，放弃。</p>
-</blockquote>
-<p>然后找到官方维护的<a target="_blank" rel="noopener" href="https://github.com/swagger-api/swagger-parser">swagger-parser</a>，这个倒是支持<code>swagger3</code>，但是这个有一个问题就是需要自己去写模版来套对象做输出（心累，收藏夹里吃灰吧）。</p>
-<p>那么最后瞄准一个已经遗弃的项目<a target="_blank" rel="noopener" href="https://github.com/Swagger2Markup/swagger2markup">swagger2markup</a>，作者没有太多的精力去维护，但是本身功能完善，文档详尽，但是！它不支持<code>swagger3</code>。而且它支持的格式为<code>ASCIIDOC</code>,<code>MARKDOWN</code>。但是我有神器<code>Typora</code>啊（这篇文章也是用这个编辑器写的）。支持导出为<code>pdf</code>、<code>html</code>、<code>word</code>。所以决定用它了。</p>
-<p><del>本想通过引入新版本的swagger-parser，让其直接支持<code>swagger3</code>的<code>openapi spec</code></del> 不，我不想，太累人了。</p>
-<p>最后思路变为：</p>
-<p><code>swagger3生成json</code>-&gt;<code>想办法将其转化为swagger2</code>-&gt;<code>使用swagger2markup生成markdown</code>-&gt;<code>Typora将markdown转化为word</code>-&gt;<code>完美Over</code></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/04/27/swaggertoword/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/02/02/final-static-spock-test/" rel="prev" title="Spock单元测试中针对final static的处理">
+      <i class="fa fa-chevron-left"></i> Spock单元测试中针对final static的处理
+    </a></div>
+      <div class="post-nav-item"></div>
     </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
       </footer>
+    
   </article>
   
   
   
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://qingmo.github.io/2022/04/01/mybusinesstemplate3/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/arch.png">
-      <meta itemprop="name" content="Chaos">
-      <meta itemprop="description" content="不以为耻，反以为荣">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Chaos's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/04/01/mybusinesstemplate3/" class="post-title-link" itemprop="url">mybusinesstemplate3</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-04-01 15:40:39" itemprop="dateCreated datePublished" datetime="2022-04-01T15:40:39+08:00">2022-04-01</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-01-28 15:55:12" itemprop="dateModified" datetime="2023-01-28T15:55:12+08:00">2023-01-28</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://qingmo.github.io/2022/03/31/basicioc/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/arch.png">
-      <meta itemprop="name" content="Chaos">
-      <meta itemprop="description" content="不以为耻，反以为荣">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Chaos's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/03/31/basicioc/" class="post-title-link" itemprop="url">最小化Ioc容器使用样例</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-03-31 14:36:52" itemprop="dateCreated datePublished" datetime="2022-03-31T14:36:52+08:00">2022-03-31</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-01-28 15:55:12" itemprop="dateModified" datetime="2023-01-28T15:55:12+08:00">2023-01-28</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="最小化Ioc容器使用样例"><a href="#最小化Ioc容器使用样例" class="headerlink" title="最小化Ioc容器使用样例"></a>最小化Ioc容器使用样例</h1><p>什么是容器？容器是一种为某种特定组件的运行提供必要支持的一个软件环境。例如，Tomcat就是一个Servlet容器，它可以为Servlet的运行提供运行环境。类似Docker这样的软件也是一个容器，它提供了必要的Linux环境以便运行一个特定的Linux进程。IoC容器，可以管理所有轻量级的JavaBean组件，提供的底层服务包括组件的生命周期管理、配置和组装服务、AOP支持，以及建立在AOP基础上的声明式事务服务等。我们平时接触最多的就是<a target="_blank" rel="noopener" href="https://spring.io/"><code>Spring Framework</code></a>，此篇中还会展示另外一个IoC容器<a target="_blank" rel="noopener" href="https://github.com/google/guice"><code>google guice</code></a>的使用例子。</p>
-<h2 id="原始样例"><a href="#原始样例" class="headerlink" title="原始样例"></a>原始样例</h2><p>先创建一个空的<code>maven</code>工程。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> org.chaos;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        BusinessService businessService = <span class="keyword">new</span> BusinessService();</span><br><span class="line">        System.out.println(businessService.doBusiness(<span class="string">&quot;chaos&quot;</span>));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> org.chaos;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BusinessService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">doBusiness</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        PrintService printService = <span class="keyword">new</span> PrintService();</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;I need do print with &quot;</span> + printService.print(name);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> org.chaos;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PrintService</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">print</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;English print with &quot;</span> + name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这里<code>BusinessService</code>直接强依赖于<code>PrintService</code>，如果使用者(这里是<code>Main</code>)根据特定条件来打印内容，就会遇到问题。例如</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (currentLocation.equals(<span class="string">&quot;中国&quot;</span>)) &#123;</span><br><span class="line">  <span class="comment">//希望调用doBusiness然后执行中文打印</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  <span class="comment">//希望调用doBusiness然后执行英文打印</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这里就需要用到控制反转，肯定的是这里也不能使用具体的实现类了，不然我们需要根据具体的实现类编写多个<code>doBusiness</code>， 这也是IoC容器的基本功能体现。(常规做法实际上是先将<code>new</code>改为工厂类，从直接依赖接耦为间接依赖)</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/03/31/basicioc/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://qingmo.github.io/2022/03/02/mybusinesstemplate2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/arch.png">
-      <meta itemprop="name" content="Chaos">
-      <meta itemprop="description" content="不以为耻，反以为荣">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Chaos's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/03/02/mybusinesstemplate2/" class="post-title-link" itemprop="url">打造一套自己的业务开发模版2</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-03-02 10:03:21" itemprop="dateCreated datePublished" datetime="2022-03-02T10:03:21+08:00">2022-03-02</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-01-28 15:55:12" itemprop="dateModified" datetime="2023-01-28T15:55:12+08:00">2023-01-28</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>继<a href="https://qingmo.github.io/2022/03/01/mybusinesstemplate/">上一篇</a>完成数据库初始化之后，我们需要配置工程的一些基本配置元素。</p>
-<h2 id="先建立包结构"><a href="#先建立包结构" class="headerlink" title="先建立包结构"></a>先建立包结构</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">├── annotations</span><br><span class="line">├── configurations</span><br><span class="line">├── controllers</span><br><span class="line">├── exceptions</span><br><span class="line">├── interceptors</span><br><span class="line">├── mappers</span><br><span class="line">├── pojos</span><br><span class="line">│   ├── bos</span><br><span class="line">│   ├── dos</span><br><span class="line">│   ├── dtos</span><br><span class="line">│   ├── enums</span><br><span class="line">│   ├── transfers  &#x2F;&#x2F;mapstruct转换器专用</span><br><span class="line">│   └── vos</span><br><span class="line">└── services</span><br></pre></td></tr></table></figure>
-
-<p>建立一套从<code>service</code>、<code>mapper</code>、<code>vo</code>、<code>do</code>的访问代码，这里以<code>sys_user</code>表为例。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/03/02/mybusinesstemplate2/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://qingmo.github.io/2022/03/01/mybusinesstemplate/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/arch.png">
-      <meta itemprop="name" content="Chaos">
-      <meta itemprop="description" content="不以为耻，反以为荣">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Chaos's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/03/01/mybusinesstemplate/" class="post-title-link" itemprop="url">打造一套自己的业务开发模版</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-03-01 18:01:44" itemprop="dateCreated datePublished" datetime="2022-03-01T18:01:44+08:00">2022-03-01</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-01-28 15:55:12" itemprop="dateModified" datetime="2023-01-28T15:55:12+08:00">2023-01-28</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>从今天起，开始打造一套属于自己的业务开发代码模版，本系列不会直接提供代码，只会展示部分关键性代码片段。</p>
-<h2 id="建立java模版"><a href="#建立java模版" class="headerlink" title="建立java模版"></a>建立java模版</h2><p>进入<a target="_blank" rel="noopener" href="https://start.spring.io/">https://start.spring.io/</a></p>
-<p>选择：</p>
-<ul>
-<li><code>Spring Web</code></li>
-</ul>
-<ul>
-<li><p><code>Lombok</code></p>
-</li>
-<li><p><code>Validation</code></p>
-</li>
-<li><p><code>Mybatis Framework</code></p>
-</li>
-<li><p><code>MySQL Driver</code></p>
-</li>
-<li><p><code>Spring Boot DevTools</code></p>
-</li>
-<li><p><code>Flyway Migration</code></p>
-</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">autoboot ~/Downloads/template.zip</span><br></pre></td></tr></table></figure>
-
-<p>这里是我自己定制的一个自动解压开intellij脚本。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/03/01/mybusinesstemplate/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://qingmo.github.io/2021/11/19/rustdailylib-clap/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/arch.png">
-      <meta itemprop="name" content="Chaos">
-      <meta itemprop="description" content="不以为耻，反以为荣">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Chaos's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/11/19/rustdailylib-clap/" class="post-title-link" itemprop="url">Rust每日一库之Clap</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-11-19 11:24:05" itemprop="dateCreated datePublished" datetime="2021-11-19T11:24:05+08:00">2021-11-19</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-01-28 15:55:12" itemprop="dateModified" datetime="2023-01-28T15:55:12+08:00">2023-01-28</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="缘起"><a href="#缘起" class="headerlink" title="缘起"></a>缘起</h1><p>主要对<a target="_blank" rel="noopener" href="https://github.com/darjun/go-daily-lib">go每日一库</a>和<a target="_blank" rel="noopener" href="https://rustcc.cn/search?q=%E6%AF%8F%E5%91%A8%E4%B8%80%E5%BA%93">Rust每周一库</a>的拾人牙慧，不过学习嘛，不寒碜。哈哈。</p>
-<p>今天是第一天，我们从命令行参数解析库——<code>Clap</code>开始。</p>
-<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>相较于<code>golang</code>，<code>rust</code>的解析命令参数等非语言核心能力并非是在核心库中直接提供的，而是由三方库提供。</p>
-<p>三方库就会有一个选择问题，特别是对于不熟悉的新手。</p>
-<p>我们可以通过<code>lib.rs</code>网站中<code>Categories</code>中选择<code>Command-line interface</code>来查看对应的库排名来初步选择。</p>
-<p>如：<a target="_blank" rel="noopener" href="https://lib.rs/keywords/argument">https://lib.rs/keywords/argument</a></p>
-<p>对于参数解析，使用量最大的就是<code>Clap</code></p>
-<p>仓库：<a target="_blank" rel="noopener" href="https://github.com/clap-rs/clap">https://github.com/clap-rs/clap</a></p>
-<p>文档：<a target="_blank" rel="noopener" href="https://docs.rs/clap/3.0.0-beta.5/clap/">https://docs.rs/clap/3.0.0-beta.5/clap/</a></p>
-<p>视频教程：<a target="_blank" rel="noopener" href="https://www.youtube.com/playlist?list=PLza5oFLQGTl2Z5T8g1pRkIynR3E0_pc7U">https://www.youtube.com/playlist?list=PLza5oFLQGTl2Z5T8g1pRkIynR3E0_pc7U</a></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/11/19/rustdailylib-clap/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-
-  
-  <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
-  </nav>
 
 
 
@@ -1022,6 +347,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%BF%94%E5%9B%9E%E5%80%BC%E5%BC%80%E5%90%AF%E5%8E%8B%E7%BC%A9"><span class="nav-number">1.</span> <span class="nav-text">服务端返回值开启压缩</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%8F%91%E9%80%81%E5%8E%8B%E7%BC%A9%E8%AF%B7%E6%B1%82"><span class="nav-number">2.</span> <span class="nav-text">客户端发送压缩请求</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%881-feign-okhttp-undertow"><span class="nav-number">2.1.</span> <span class="nav-text">方案1: feign_okhttp_undertow</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%882-feign-okhttp-tomcat"><span class="nav-number">2.2.</span> <span class="nav-text">方案2: feign_okhttp_tomcat</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
